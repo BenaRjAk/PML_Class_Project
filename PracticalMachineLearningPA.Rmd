@@ -1,0 +1,29 @@
+# Prediction Assignment Writeup
+### Mark Anderson
+### Coursera Practical Machine Learning (predmachlearn-013)
+
+```{r echo=TRUE}
+train_data_url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+pml_training_csv <- 'pml-training.csv'
+
+if (!file.exists(pml_training_csv)) {
+  download.file(train_data_url, destfile=pml_training_csv, method='curl')
+  date_train_downloaded <- date()
+  print(paste(pml_training_csv, "downloaded", date_train_downloaded))
+} else {
+  print(paste(pml_training_csv, "already exist on disk" ))
+}
+```
+
+```{r echo=TRUE}
+testing_data_url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+pml_testing_csv <- 'pml-testing.csv'
+
+if (!file.exists(pml_testing_csv)) {
+  download.file(testing_data_url, destfile=pml_testing_csv, method='curl')
+  date_test_downloaded <- date()
+  print(paste(pml_testing_csv, "downloaded", date_test_downloaded))
+} else {
+  print(paste(pml_testing_csv,"%s already exist on disk"))
+}
+```

@@ -11,3 +11,7 @@
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
+
+.DS_Store
+pml-testing.csv
+pml-training.csv
