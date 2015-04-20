@@ -15,3 +15,26 @@ vignettes/*.pdf
 .DS_Store
 pml-testing.csv
 pml-training.csv
+problem_id_*.txt
+.Rproj.user
+
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_1.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_10.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_11.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_12.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_13.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_14.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_15.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_16.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_17.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_18.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_19.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_2.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_20.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_3.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_4.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_5.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_6.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_7.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_8.txt
+-rw-r--r--  1 mark  staff         2 Apr 19 22:45 problem_id_9.txt

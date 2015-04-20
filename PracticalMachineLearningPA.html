@@ -69,27 +69,327 @@ img {
 <div id="coursera-practical-machine-learning-predmachlearn-013" class="section level3">
 <h3>Coursera Practical Machine Learning (predmachlearn-013)</h3>
 <pre class="r"><code>train_data_url &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
-pml_training_csv &lt;- 'pml-training.csv'
-
-if (!file.exists(pml_training_csv)) {
-  download.file(train_data_url, destfile=pml_training_csv, method='curl')
-  date_train_downloaded &lt;- date()
-  print(paste(pml_training_csv, &quot;downloaded&quot;, date_train_downloaded))
-} else {
-  print(paste(pml_training_csv, &quot;already exist on disk&quot; ))
-}</code></pre>
-<pre><code>## [1] &quot;pml-training.csv already exist on disk&quot;</code></pre>
+if (!file.exists(&quot;pml-training.csv&quot;)) {
+  download.file(train_data_url, destfile='pml-training.csv', method='curl')
+}
+pml_train &lt;- read.csv(&quot;pml-training.csv&quot;, na.strings = c(&quot;NA&quot;,&quot;&quot;))
+dim(pml_train)</code></pre>
+<pre><code>## [1] 19622   160</code></pre>
 <pre class="r"><code>testing_data_url &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;
-pml_testing_csv &lt;- 'pml-testing.csv'
+if (!file.exists(&quot;pml-testing.csv&quot;)) {
+  download.file(testing_data_url, destfile='pml-testing.csv', method='curl')
+}
+pml_test &lt;- read.csv(&quot;pml-testing.csv&quot;, na.strings = c(&quot;NA&quot;,&quot;&quot;))
+dim(pml_test)</code></pre>
+<pre><code>## [1]  20 160</code></pre>
+<p>Tidy up data</p>
+<pre class="r"><code>tidy_train &lt;- pml_train[!grepl(&quot;yes&quot;,pml_train$new_window),]
+artifacts &lt;- c(1:7)
+cn_kurtosis  &lt;- grep(&quot;^kurtosis_&quot;, colnames(tidy_train))
+cn_skewness  &lt;- grep(&quot;^skewness_&quot;, colnames(tidy_train))
+cn_max       &lt;- grep(&quot;^max_&quot;,      colnames(tidy_train))
+cn_min       &lt;- grep(&quot;^min_&quot;,      colnames(tidy_train))
+cn_var       &lt;- grep(&quot;^var_&quot;,      colnames(tidy_train))
+cn_avg       &lt;- grep(&quot;^avg_&quot;,      colnames(tidy_train))
+cn_stddev    &lt;- grep(&quot;^stddev_&quot;,   colnames(tidy_train))
+cn_total     &lt;- grep(&quot;^total_&quot;,      colnames(tidy_train))
+cn_amplitude &lt;- grep(&quot;^amplitude_&quot;,colnames(tidy_train))
 
-if (!file.exists(pml_testing_csv)) {
-  download.file(testing_data_url, destfile=pml_testing_csv, method='curl')
-  date_test_downloaded &lt;- date()
-  print(paste(pml_testing_csv, &quot;downloaded&quot;, date_test_downloaded))
-} else {
-  print(paste(pml_testing_csv,&quot;%s already exist on disk&quot;))
-}</code></pre>
-<pre><code>## [1] &quot;pml-testing.csv %s already exist on disk&quot;</code></pre>
+exclusions &lt;- c(artifacts, cn_kurtosis, cn_skewness, cn_max, cn_min,
+               cn_var, cn_avg, cn_stddev, cn_total,  cn_amplitude)
+tidy_train = tidy_train[,-exclusions]
+dim(tidy_train)</code></pre>
+<pre><code>## [1] 19216    49</code></pre>
+<pre class="r"><code>colnames(tidy_train)</code></pre>
+<pre><code>##  [1] &quot;roll_belt&quot;         &quot;pitch_belt&quot;        &quot;yaw_belt&quot;         
+##  [4] &quot;gyros_belt_x&quot;      &quot;gyros_belt_y&quot;      &quot;gyros_belt_z&quot;     
+##  [7] &quot;accel_belt_x&quot;      &quot;accel_belt_y&quot;      &quot;accel_belt_z&quot;     
+## [10] &quot;magnet_belt_x&quot;     &quot;magnet_belt_y&quot;     &quot;magnet_belt_z&quot;    
+## [13] &quot;roll_arm&quot;          &quot;pitch_arm&quot;         &quot;yaw_arm&quot;          
+## [16] &quot;gyros_arm_x&quot;       &quot;gyros_arm_y&quot;       &quot;gyros_arm_z&quot;      
+## [19] &quot;accel_arm_x&quot;       &quot;accel_arm_y&quot;       &quot;accel_arm_z&quot;      
+## [22] &quot;magnet_arm_x&quot;      &quot;magnet_arm_y&quot;      &quot;magnet_arm_z&quot;     
+## [25] &quot;roll_dumbbell&quot;     &quot;pitch_dumbbell&quot;    &quot;yaw_dumbbell&quot;     
+## [28] &quot;gyros_dumbbell_x&quot;  &quot;gyros_dumbbell_y&quot;  &quot;gyros_dumbbell_z&quot; 
+## [31] &quot;accel_dumbbell_x&quot;  &quot;accel_dumbbell_y&quot;  &quot;accel_dumbbell_z&quot; 
+## [34] &quot;magnet_dumbbell_x&quot; &quot;magnet_dumbbell_y&quot; &quot;magnet_dumbbell_z&quot;
+## [37] &quot;roll_forearm&quot;      &quot;pitch_forearm&quot;     &quot;yaw_forearm&quot;      
+## [40] &quot;gyros_forearm_x&quot;   &quot;gyros_forearm_y&quot;   &quot;gyros_forearm_z&quot;  
+## [43] &quot;accel_forearm_x&quot;   &quot;accel_forearm_y&quot;   &quot;accel_forearm_z&quot;  
+## [46] &quot;magnet_forearm_x&quot;  &quot;magnet_forearm_y&quot;  &quot;magnet_forearm_z&quot; 
+## [49] &quot;classe&quot;</code></pre>
+<pre class="r"><code>library(doMC)</code></pre>
+<pre><code>## Loading required package: foreach
+## Loading required package: iterators
+## Loading required package: parallel</code></pre>
+<pre class="r"><code>registerDoMC(cores=2)
+
+Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:43:55 CDT&quot;</code></pre>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>library(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre class="r"><code>set.seed(1018)
+folds &lt;- createFolds(y=tidy_train$classe,k=4,returnTrain=FALSE)
+
+train_1 &lt;- tidy_train[-folds[[1]],]
+test_1  &lt;- tidy_train[ folds[[1]],]
+train_2 &lt;- tidy_train[-folds[[2]],]
+test_2  &lt;- tidy_train[ folds[[2]],]
+train_3 &lt;- tidy_train[-folds[[3]],]
+test_3  &lt;- tidy_train[ folds[[3]],]
+train_4 &lt;- tidy_train[-folds[[4]],]
+test_4  &lt;- tidy_train[ folds[[4]],]
+
+Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:44:01 CDT&quot;</code></pre>
+<pre class="r"><code>model_rf_1 &lt;- randomForest(classe ~ ., train_1, ntree=200, norm.votes=FALSE)
+model_rf_1</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = train_1, ntree = 200,      norm.votes = FALSE) 
+##                Type of random forest: classification
+##                      Number of trees: 200
+## No. of variables tried at each split: 6
+## 
+##         OOB estimate of  error rate: 0.48%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 4099    2    1    0    1 0.0009748964
+## B   13 2771    5    0    0 0.0064539261
+## C    0   12 2500    2    0 0.0055688146
+## D    0    0   25 2333    2 0.0114406780
+## E    0    0    4    2 2640 0.0022675737</code></pre>
+<pre class="r"><code>prediction_rf_1 &lt;- predict(model_rf_1,test_1)
+confusionMatrix(prediction_rf_1,test_1$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1367    0    0    0    0
+##          B    1  927    1    0    0
+##          C    0    2  837   15    0
+##          D    0    0    0  768    1
+##          E    0    0    0    4  881
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.995           
+##                  95% CI : (0.9926, 0.9968)
+##     No Information Rate : 0.2848          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9937          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9993   0.9978   0.9988   0.9759   0.9989
+## Specificity            1.0000   0.9995   0.9957   0.9998   0.9990
+## Pos Pred Value         1.0000   0.9978   0.9801   0.9987   0.9955
+## Neg Pred Value         0.9997   0.9995   0.9997   0.9953   0.9997
+## Prevalence             0.2848   0.1934   0.1744   0.1638   0.1836
+## Detection Rate         0.2846   0.1930   0.1742   0.1599   0.1834
+## Detection Prevalence   0.2846   0.1934   0.1778   0.1601   0.1842
+## Balanced Accuracy      0.9996   0.9987   0.9973   0.9878   0.9989</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:44:21 CDT&quot;</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:44:21 CDT&quot;</code></pre>
+<pre class="r"><code>model_rf_2 &lt;- randomForest(classe ~ ., train_2, ntree=200, norm.votes=FALSE)
+model_rf_2</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = train_2, ntree = 200,      norm.votes = FALSE) 
+##                Type of random forest: classification
+##                      Number of trees: 200
+## No. of variables tried at each split: 6
+## 
+##         OOB estimate of  error rate: 0.44%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 4100    3    1    0    0 0.0009746589
+## B   10 2775    4    0    0 0.0050197203
+## C    0   18 2494    2    0 0.0079554495
+## D    0    0   16 2342    2 0.0076271186
+## E    0    0    3    4 2639 0.0026455026</code></pre>
+<pre class="r"><code>prediction_rf_2 &lt;- predict(model_rf_2,test_2)
+confusionMatrix(prediction_rf_2,test_2$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1365    5    0    0    0
+##          B    2  923    3    0    0
+##          C    0    1  834    8    0
+##          D    0    0    1  779    3
+##          E    0    0    0    0  879
+## 
+## Overall Statistics
+##                                          
+##                Accuracy : 0.9952         
+##                  95% CI : (0.9928, 0.997)
+##     No Information Rate : 0.2846         
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
+##                                          
+##                   Kappa : 0.9939         
+##  Mcnemar's Test P-Value : NA             
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9985   0.9935   0.9952   0.9898   0.9966
+## Specificity            0.9985   0.9987   0.9977   0.9990   1.0000
+## Pos Pred Value         0.9964   0.9946   0.9893   0.9949   1.0000
+## Neg Pred Value         0.9994   0.9985   0.9990   0.9980   0.9992
+## Prevalence             0.2846   0.1934   0.1745   0.1639   0.1836
+## Detection Rate         0.2842   0.1922   0.1736   0.1622   0.1830
+## Detection Prevalence   0.2852   0.1932   0.1755   0.1630   0.1830
+## Balanced Accuracy      0.9985   0.9961   0.9965   0.9944   0.9983</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:44:43 CDT&quot;</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:44:43 CDT&quot;</code></pre>
+<pre class="r"><code>model_rf_3 &lt;- randomForest(classe ~ ., train_3, ntree=200, norm.votes=FALSE)
+model_rf_3</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = train_3, ntree = 200,      norm.votes = FALSE) 
+##                Type of random forest: classification
+##                      Number of trees: 200
+## No. of variables tried at each split: 6
+## 
+##         OOB estimate of  error rate: 0.46%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 4099    3    1    0    0 0.0009748964
+## B    7 2780    1    0    0 0.0028694405
+## C    2   13 2494    5    0 0.0079554495
+## D    0    0   23 2336    1 0.0101694915
+## E    0    0    2    8 2636 0.0037792895</code></pre>
+<pre class="r"><code>prediction_rf_3 &lt;- predict(model_rf_3,test_3)
+confusionMatrix(prediction_rf_3,test_3$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1368   11    0    0    0
+##          B    0  917    5    0    0
+##          C    0    2  832   13    0
+##          D    0    0    1  774    1
+##          E    0    0    0    0  881
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9931          
+##                  95% CI : (0.9904, 0.9953)
+##     No Information Rate : 0.2847          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9913          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   0.9860   0.9928   0.9835   0.9989
+## Specificity            0.9968   0.9987   0.9962   0.9995   1.0000
+## Pos Pred Value         0.9920   0.9946   0.9823   0.9974   1.0000
+## Neg Pred Value         1.0000   0.9967   0.9985   0.9968   0.9997
+## Prevalence             0.2847   0.1935   0.1744   0.1638   0.1836
+## Detection Rate         0.2847   0.1908   0.1732   0.1611   0.1834
+## Detection Prevalence   0.2870   0.1919   0.1763   0.1615   0.1834
+## Balanced Accuracy      0.9984   0.9924   0.9945   0.9915   0.9994</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:45:04 CDT&quot;</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:45:04 CDT&quot;</code></pre>
+<pre class="r"><code>model_rf_4 &lt;- randomForest(classe ~ ., train_4, ntree=200, norm.votes=FALSE)
+model_rf_4</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = train_4, ntree = 200,      norm.votes = FALSE) 
+##                Type of random forest: classification
+##                      Number of trees: 200
+## No. of variables tried at each split: 6
+## 
+##         OOB estimate of  error rate: 0.56%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 4102    1    0    0    0 0.0002437241
+## B   18 2762    8    0    0 0.0093256815
+## C    0   15 2497    2    0 0.0067621321
+## D    0    0   23 2337    1 0.0101651842
+## E    0    0    2   10 2634 0.0045351474</code></pre>
+<pre class="r"><code>prediction_rf_4 &lt;- predict(model_rf_4,test_4)
+confusionMatrix(prediction_rf_4,test_4$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1367    2    0    0    0
+##          B    1  928    5    0    0
+##          C    0    0  832    5    1
+##          D    0    0    1  781    6
+##          E    0    0    0    0  875
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9956          
+##                  95% CI : (0.9933, 0.9973)
+##     No Information Rate : 0.2848          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9945          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9993   0.9978   0.9928   0.9936   0.9921
+## Specificity            0.9994   0.9985   0.9985   0.9983   1.0000
+## Pos Pred Value         0.9985   0.9936   0.9928   0.9911   1.0000
+## Neg Pred Value         0.9997   0.9995   0.9985   0.9988   0.9982
+## Prevalence             0.2848   0.1936   0.1744   0.1636   0.1836
+## Detection Rate         0.2846   0.1932   0.1732   0.1626   0.1821
+## Detection Prevalence   0.2850   0.1944   0.1744   0.1640   0.1821
+## Balanced Accuracy      0.9993   0.9982   0.9957   0.9959   0.9960</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:45:22 CDT&quot;</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:45:22 CDT&quot;</code></pre>
+<pre class="r"><code>model_rf &lt;- randomForest(classe ~ ., tidy_train, ntree=200, norm.votes=FALSE)
+model_rf</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = tidy_train, ntree = 200,      norm.votes = FALSE) 
+##                Type of random forest: classification
+##                      Number of trees: 200
+## No. of variables tried at each split: 6
+## 
+##         OOB estimate of  error rate: 0.35%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 5468    3    0    0    0 0.0005483458
+## B   11 3702    5    0    0 0.0043033889
+## C    0   13 3337    2    0 0.0044749403
+## D    0    0   23 3122    2 0.0079440737
+## E    0    0    1    7 3520 0.0022675737</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2015-04-19 22:45:48 CDT&quot;</code></pre>
+<pre class="r"><code>answers &lt;- predict(model_rf, pml_test)
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0(&quot;problem_id_&quot;,i,&quot;.txt&quot;)
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)</code></pre>
 </div>
 </div>
 
