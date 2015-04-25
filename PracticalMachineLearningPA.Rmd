@@ -5,22 +5,22 @@
 ## Abstract
 Using data from an experiment to recognize the proper execution of weight lifting exercises, a model is build to predict
 sensor data from the experiment.  Participants in the original study were asked to correctly perform an exercise, and to perform the exercise with 4 common errors.  From the data of the experiments, a random forest model was built to use the
-collected data to predict whether the exercise was performed correctly or in one of the 4 error modes.  First a four models
-were build to perform cross-validaion and verify that for the random forest process, Out Of Bag error rate matches 
+collected data to predict whether the exercise was performed correctly or in one of the 4 error modes.  First four models
+were build to perform cross-validation and verify that for the random forest process Out Of Bag error rate matches 
 observed cross-validation error.  Then a model was build with the full data set and use to predict the values of the
-test set.  It was possible to construct an extremely accurate (perhaps overfit) model to correctly perdict all the values
+test set.  It was possible to construct an extremely accurate (perhaps overfit) model to correctly predict all the values
 of the test set.
 
 
 
 ## References
-(Qualitative Activity Recognition of Weight Lifting Exercises)[http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf]
+[Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf)
 
-(Breiman, Out-Of-Bag Estimation)[http://www.stat.berkelry.edu/~breiman/OOBestimation.pdf]
+[Breiman, Out-Of-Bag Estimation](http://www.stat.berkeley.edu/~breiman/OOBestimation.pdf)
 
 
 ## Goals
-The goal is to correct perdict the class(e) of the exercise among 
+The goal is to correct predict the class(e) of the exercise among 
 (Class A) as specified, 
 (Class B) the elbows to the front, 
 (Class C) lifting the dumbbell, 
@@ -58,8 +58,8 @@ Examining the date in a text editor
 it was apparent that there were two
 classes of data present, those with aggregate values and those without.  
 The vast majority of the data was simply raw data.  The choice was made
-to set aside the data on rows where the value of the column new_window
-was yes.  In addition, the first 7 columns were experimental artifacts
+to set aside the the computed values and stick with the raw sensor
+readings.  In addition, the first 7 columns were experimental artifacts
 like IDs and timestamps and thus were also selected for removal.
 
 ```{r echo=TRUE}
@@ -72,7 +72,7 @@ cn_min       <- grep("^min_",      colnames(tidy_train))
 cn_var       <- grep("^var_",      colnames(tidy_train))
 cn_avg       <- grep("^avg_",      colnames(tidy_train))
 cn_stddev    <- grep("^stddev_",   colnames(tidy_train))
-cn_total     <- grep("^total_",      colnames(tidy_train))
+cn_total     <- grep("^total_",    colnames(tidy_train))
 cn_amplitude <- grep("^amplitude_",colnames(tidy_train))
 
 exclusions <- c(artifacts, cn_kurtosis, cn_skewness, cn_max, cn_min,
@@ -85,22 +85,25 @@ colnames(tidy_train)
 
 ## Cross Validation
 
-The model building method choosen to for this assignment was Random Forest.
+The model building method chosen to for this assignment was Random Forest.
 For Random Forest Out-of-bag estimates can used, instead of cross validation,
 to predict out of sample error. (Breiman, Out-Of-Bag Estimation)[http://www.stat.berkelry.edu/~breiman/OOBestimation.pdf].
-None the less, 4-fold cross validation was initialy done to observe this effect.
+None the less, 4-fold cross validation was initially done to observe this effect.
 After observing the match of cross validation and out-of-bag error estimates,
 A Random Forest model was constructed with all the training data.
 
-## Out of Sample Error
 
-```{r echo=TRUE}
-library(doMC)
+```{r message=FALSE}
+library(doMC)         # speed up execution running in two cores:w
 registerDoMC(cores=2)
+```
 
-Sys.time()
+```{r message=FALSE}
 library(caret)
 library(randomForest)
+```
+
+```{r echo=TRUE}
 set.seed(1018)
 folds <- createFolds(y=tidy_train$classe,k=4,returnTrain=FALSE)
 
@@ -113,30 +116,50 @@ test_3  <- tidy_train[ folds[[3]],]
 train_4 <- tidy_train[-folds[[4]],]
 test_4  <- tidy_train[ folds[[4]],]
 
+# Build and test model from fold1
 model_rf_1 <- randomForest(classe ~ ., train_1, ntree=200, norm.votes=FALSE)
 model_rf_1
 prediction_rf_1 <- predict(model_rf_1,test_1)
 confusionMatrix(prediction_rf_1,test_1$classe)$overall[1]
 
+# Build and test model from fold2
 model_rf_2 <- randomForest(classe ~ ., train_2, ntree=200, norm.votes=FALSE)
 model_rf_2
 prediction_rf_2 <- predict(model_rf_2,test_2)
 confusionMatrix(prediction_rf_2,test_2$classe)$overall[1]
 
+# Build and test model from fold3
 model_rf_3 <- randomForest(classe ~ ., train_3, ntree=200, norm.votes=FALSE)
 model_rf_3
 prediction_rf_3 <- predict(model_rf_3,test_3)
 confusionMatrix(prediction_rf_3,test_3$classe)$overall[1]
 
-
+# Build and test model from fold4
 model_rf_4 <- randomForest(classe ~ ., train_4, ntree=200, norm.votes=FALSE)
 model_rf_4
 prediction_rf_4 <- predict(model_rf_4,test_4)
 confusionMatrix(prediction_rf_4,test_4$classe)$overall[1]
+```
 
+The OOB estimate of  error rate and cross validation testing
+```
+        OOB Est   Accuracy    1-Accuracy
+ fold1    0.48%    0.9950042    0.0049958
+ fold2    0.44%    0.9952113    0.0047887
+ fold3    0.46%    0.9931322    0.0068678
+ fold4    0.56%    0.9956286    0.0043714
+```
+
+## Out of Sample Error
+
+```{r echo=TRUE}
 model_rf <- randomForest(classe ~ ., tidy_train, ntree=200, norm.votes=FALSE)
 model_rf
 ```
+The Out-of-bag estimate of the full model is 0.35%.  This is consistent with
+the out of bag estimates of the 4-fold cross validation models, which were in line with
+the actual cross validation results of the predictions on the withheld test data.
+The estimated accuracy of the model is 99.6%.
 
 ## Prediction and submission
 
